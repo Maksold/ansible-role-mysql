@@ -1,4 +1,9 @@
 ---
+- name: Install official the MySQL repo.
+  yum:
+    name: https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+    state: present
+
 - name: Ensure MySQL packages are installed.
   yum:
     name: "{{ mysql_packages }}"
