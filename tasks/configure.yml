@@ -66,7 +66,6 @@
     creates: "{{ mysql_log_error }}"
     warn: false
   when:
-    - mysql_log | default(true)
     - mysql_log_error | default(false)
   tags: ['skip_ansible_galaxy']
 
@@ -78,7 +77,6 @@
     group: "{{ mysql_log_file_group }}"
     mode: 0640
   when:
-    - mysql_log | default(true)
     - mysql_log_error | default(false)
   tags: ['skip_ansible_galaxy']
 
