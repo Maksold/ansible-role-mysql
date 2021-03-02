@@ -1,8 +1,18 @@
 ---
-- name: Install official the MySQL repo.
-  yum:
-    name: https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
-    state: present
+- name: Copy mysql-community.repo file
+  template:
+    src: "mysql-community.repo.j2"
+    dest: "/etc/yum.repos.d/mysql-community.repo"
+    owner: root
+    group: root
+    mode: 0644
+  register: mysql_community_repo_output
+
+- name: Clean YUM repos metadata cache
+  command: yum clean metadata
+  args:
+    warn: false
+  when: mysql_community_repo_output.changed
 
 - name: Ensure MySQL packages are installed.
   ansible.builtin.yum:

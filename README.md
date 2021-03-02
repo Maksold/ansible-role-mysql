@@ -19,6 +19,10 @@ No special requirements; note that this role requires root access, so either run
 
 Available variables are listed below, along with default values (see `defaults/main.yml`):
 
+    mysql_version: 5.7
+
+The MySQL version to install. Supported only 5.7 and 8.0.
+
 ```yaml
 mysql_user_home: /root
 mysql_user_name: root
@@ -183,7 +187,7 @@ If you want to install MySQL from the official repository instead of installing 
         name: http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
         state: present
       when: ansible_os_family == "RedHat"
-  
+
     - name: Override variables for MySQL (RedHat).
       set_fact:
         mysql_daemon: mysqld

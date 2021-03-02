@@ -1,9 +1,15 @@
 ---
-- name: Acquire temporary root pass
+- name: Acquire temporary root pass for MySQL 5.7
   shell: >
     awk '$0 ~ "temporary password" {print $11}' {{ mysql_log_error }}
   register: mysql_root_temp_password
   when: ((mysql_install_packages | bool) or mysql_root_password_update) and ('5.7.' in mysql_cli_version.stdout)
+
+- name: Acquire temporary root pass for MySQL 8.0
+  shell: >
+    awk '$0 ~ "temporary password" {print $13}' {{ mysql_log_error }}
+  register: mysql_root_temp_password
+  when: ((mysql_install_packages | bool) or mysql_root_password_update) and ('8.0.' in mysql_cli_version.stdout)
 
 - name: Copy .my.cnf file with temporary root password credentials
   template:
