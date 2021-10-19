@@ -1,0 +1,24 @@
+---
+- name: Create config owerride directory for mysqld service
+  ansible.builtin.file:
+    path: "{{ mysql_service_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Copy limit.conf to config owerride directory for mysqld service
+  ansible.builtin.template:
+    src: service-limit.conf.j2
+    dest: "{{ mysql_service_config_dir }}/{{ mysql_service_config_filename }}"
+    owner: root
+    group: root
+    mode: 0644
+  register: mysql_service_config
+  notify:
+    - restart mysql
+
+- name: Reload systemd configs
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  when: mysql_service_config.changed
