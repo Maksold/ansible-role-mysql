@@ -144,3 +144,8 @@ mysql_hide_passwords: false
 # Binary Logging settings
 mysql_binlog_disabled: false
 mysql_binlog_expire_logs_seconds: 2592000 # 30 days
+
+# Service settings
+mysql_service_config_dir: /etc/systemd/system/mysqld.service.d
+mysql_service_config_filename: limit.conf
+mysql_service_config_limit_nofile: 65535
