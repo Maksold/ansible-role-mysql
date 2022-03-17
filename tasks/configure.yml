@@ -74,6 +74,7 @@
     owner: mysql
     group: "{{ mysql_log_file_group }}"
     mode: 0640
+    setype: mysqld_log_t
   when:
     - mysql_log_error | default(false)
   tags: ['skip_ansible_galaxy']
