@@ -89,5 +89,6 @@
 
 - name: Remove MySQL test database.
   mysql_db:
-    name: 'test'
+    name: test
     state: absent
+    login_unix_socket: "{{ mysql_socket }}"
