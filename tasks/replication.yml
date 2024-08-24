@@ -5,6 +5,7 @@
     host: "{{ mysql_replication_user.host | default('%') }}"
     password: "{{ mysql_replication_user.password }}"
     priv: "{{ mysql_replication_user.priv | default('*.*:REPLICATION SLAVE,REPLICATION CLIENT') }}"
+    column_case_sensitive: "{{ mysql_daemon.startswith('mysql') and mysql_version is version('8.0', '>=') }}"
     state: present
   no_log: "{{ mysql_hide_passwords }}"
   when:

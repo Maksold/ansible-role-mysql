@@ -7,11 +7,20 @@
     group: root
     mode: 0644
   register: mysql_community_repo_output
+  when: mysql_daemon.startswith('mysql')
+
+- name: Copy mariadb.repo file
+  template:
+    src: "mariadb.repo.j2"
+    dest: "/etc/yum.repos.d/mariadb.repo"
+    owner: root
+    group: root
+    mode: 0644
+  register: mysql_community_repo_output
+  when: mysql_daemon == 'mariadb'
 
 - name: Clean YUM repos metadata cache
-  command: yum clean metadata
-  args:
-    warn: false
+  ansible.builtin.command: yum clean metadata
   when: mysql_community_repo_output.changed
 
 - name: Ensure MySQL packages are installed.

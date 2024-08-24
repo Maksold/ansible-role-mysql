@@ -125,7 +125,9 @@ innodb_lock_wait_timeout = {{ mysql_innodb_lock_wait_timeout }}
 skip_log_bin
 disable_log_bin
 {% endif %}
+{% if mysql_daemon.startswith('mysql') or (mysql_daemon == 'mariadb' and mysql_version is version('10.5', '>')) %}
 binlog_expire_logs_seconds = {{ mysql_binlog_expire_logs_seconds }}
+{% endif %}
 
 [mysqldump]
 quick

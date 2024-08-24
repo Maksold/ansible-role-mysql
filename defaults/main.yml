@@ -146,6 +146,6 @@ mysql_binlog_disabled: false
 mysql_binlog_expire_logs_seconds: 2592000 # 30 days
 
 # Service settings
-mysql_service_config_dir: /etc/systemd/system/mysqld.service.d
+mysql_service_config_dir: "/etc/systemd/system/{{ mysql_daemon }}.service.d"
 mysql_service_config_filename: limit.conf
-mysql_service_config_limit_nofile: 65535
+mysql_service_config_limit_nofile: 131072

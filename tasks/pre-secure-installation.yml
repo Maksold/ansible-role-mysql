@@ -1,67 +1,83 @@
 ---
-- name: Acquire temporary root pass for MySQL 5.7
-  shell: >
-    awk '$0 ~ "temporary password" {print $11}' {{ mysql_log_error }}
-  register: mysql_root_temp_password
-  when: ((mysql_install_packages | bool) or mysql_root_password_update) and ('5.7.' in mysql_cli_version.stdout)
+- name: Authentication changes in MariaDB version 10.4 message
+  debug:
+    msg: >
+      Authentication has changed in version 10.4. Both the root user and
+      the user that owns the data directory (mysql by default) now utilize
+      the unix_socket plugin for passwordless access, and are created with
+      an invalid password. Therefore setting a password isn't required for
+      those user accounts accessing via the unix socket. Please see
+      https://mariadb.org/authentication-in-mariadb-10-4/ .
+      Skipping authentication setup tasks!
+  when: mysql_daemon == 'mariadb'
 
-- name: Acquire temporary root pass for MySQL 8.0
-  shell: >
-    awk '$0 ~ "temporary password" {print $13}' {{ mysql_log_error }}
-  register: mysql_root_temp_password
-  when: ((mysql_install_packages | bool) or mysql_root_password_update) and ('8.0.' in mysql_cli_version.stdout)
+- name: Per-Secure install for MySQL 5.7 or 8.0
+  block:
+    - name: Acquire temporary root pass for MySQL 5.7
+      shell: >
+        awk '$0 ~ "temporary password" {print $11}' {{ mysql_log_error }}
+      register: mysql_root_temp_password
+      when: ((mysql_install_packages | bool) or mysql_root_password_update) and ('5.7.' in mysql_cli_version.stdout)
 
-- name: Copy .my.cnf file with temporary root password credentials
-  template:
-    src: "root-temporary-my.cnf.j2"
-    dest: "{{ mysql_root_home }}/.my.cnf"
-    owner: root
-    group: root
-    mode: 0600
-  when:
-    - mysql_root_temp_password is defined
-    - mysql_root_temp_password.stdout is defined
-    - mysql_root_temp_password.stdout|length > 0
+    - name: Acquire temporary root pass for MySQL 8.0
+      shell: >
+        awk '$0 ~ "temporary password" {print $13}' {{ mysql_log_error }}
+      register: mysql_root_temp_password
+      when: ((mysql_install_packages | bool) or mysql_root_password_update) and ('8.0.' in mysql_cli_version.stdout)
 
-- name: Test temporary root password expired
-  shell: "mysql -NBe 'SELECT NOW();'"
-  register: mysql_temp_password_test_result
-  when:
-    - mysql_root_temp_password is defined
-    - mysql_root_temp_password.stdout is defined
-    - mysql_root_temp_password.stdout|length > 0
-  ignore_errors: yes
+    - name: Copy .my.cnf file with temporary root password credentials
+      template:
+        src: "root-temporary-my.cnf.j2"
+        dest: "{{ mysql_root_home }}/.my.cnf"
+        owner: root
+        group: root
+        mode: 0600
+      when:
+        - mysql_root_temp_password is defined
+        - mysql_root_temp_password.stdout is defined
+        - mysql_root_temp_password.stdout|length > 0
 
-- name: Update MySQL root password for localhost root account (5.7.x).
-  shell: >
-    mysql -NBe 'ALTER USER "{{ mysql_root_username }}"@"localhost" IDENTIFIED WITH mysql_native_password BY "{{ mysql_root_password }}";'
-    --connect-expired-password
-  when:
-    - mysql_root_temp_password is defined
-    - mysql_root_temp_password.stdout is defined
-    - mysql_root_temp_password.stdout|length > 0
-    - mysql_temp_password_test_result is defined
-    - mysql_temp_password_test_result.stdout is defined
-    - ('connect-expired-password' in mysql_temp_password_test_result.stdout)
+    - name: Test temporary root password expired
+      shell: "mysql -NBe 'SELECT NOW();'"
+      register: mysql_temp_password_test_result
+      when:
+        - mysql_root_temp_password is defined
+        - mysql_root_temp_password.stdout is defined
+        - mysql_root_temp_password.stdout|length > 0
+      ignore_errors: yes
 
-- name: Overwrite .my.cnf file with root password credentials.
-  template:
-    src: "root-my.cnf.j2"
-    dest: "{{ mysql_root_home }}/.my.cnf"
-    owner: root
-    group: root
-    mode: 0600
-  when:
-    - mysql_root_temp_password is defined
-    - mysql_root_temp_password.stdout is defined
-    - mysql_root_temp_password.stdout|length > 0
+    - name: Update MySQL root password for localhost root account (5.7.x).
+      shell: >
+        mysql -NBe 'ALTER USER "{{ mysql_root_username }}"@"localhost" IDENTIFIED WITH mysql_native_password BY "{{ mysql_root_password }}";'
+        --connect-expired-password
+      when:
+        - mysql_root_temp_password is defined
+        - mysql_root_temp_password.stdout is defined
+        - mysql_root_temp_password.stdout|length > 0
+        - mysql_temp_password_test_result is defined
+        - mysql_temp_password_test_result.stdout is defined
+        - ('connect-expired-password' in mysql_temp_password_test_result.stdout)
 
-- name: Remove temporary generated password line from log file
-  lineinfile:
-    path: "{{ mysql_log_error }}"
-    regexp: "A temporary password is generated for root@localhost"
-    state: absent
-  when:
-    - mysql_root_temp_password is defined
-    - mysql_root_temp_password.stdout is defined
-    - mysql_root_temp_password.stdout|length > 0
+    - name: Overwrite .my.cnf file with root password credentials.
+      template:
+        src: "root-my.cnf.j2"
+        dest: "{{ mysql_root_home }}/.my.cnf"
+        owner: root
+        group: root
+        mode: 0600
+      when:
+        - mysql_root_temp_password is defined
+        - mysql_root_temp_password.stdout is defined
+        - mysql_root_temp_password.stdout|length > 0
+
+    - name: Remove temporary generated password line from log file
+      lineinfile:
+        path: "{{ mysql_log_error }}"
+        regexp: "A temporary password is generated for root@localhost"
+        state: absent
+      when:
+        - mysql_root_temp_password is defined
+        - mysql_root_temp_password.stdout is defined
+        - mysql_root_temp_password.stdout|length > 0
+  when: mysql_daemon.startswith('mysql')
+

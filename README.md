@@ -22,6 +22,7 @@ Available variables are listed below, along with default values (see `defaults/m
     mysql_version: 5.7
 
 The MySQL version to install. Supported only 5.7 and 8.0.
+The MariaDb version to install. Supported only >=10.5.
 
 ```yaml
 mysql_user_home: /root
