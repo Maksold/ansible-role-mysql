@@ -35,6 +35,15 @@
   with_items: "{{ mysql_config_include_files }}"
   notify: restart mysql
 
+- name: Create an empty pid file.
+  file:
+    state: touch
+    path: "{{ mysql_pid_file }}"
+    owner: mysql
+    group: mysql
+    modification_time: preserve
+    access_time: preserve
+
 - name: Create slow query log file (if configured).
   ansible.builtin.command: "touch {{ mysql_slow_query_log_file }}"
   args:
